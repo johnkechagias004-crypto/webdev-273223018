@@ -1,8 +1,11 @@
+
 {
   "name": "webdev-mcp-server",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "mcp": "node mcp-server/server.js"
+    "mcp": "node mcp-server/server.js",
+    "test": "node mcp-server/check.mjs -- npm run --silent mcp"
   }
 }
+
