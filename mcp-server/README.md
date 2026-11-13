@@ -1,46 +1,182 @@
 # Exercise 1 · MCP server
 
-Your hand-written MCP server lives in this folder. Write it in any language you like. The full task is on the exercise page; this file is the short version plus your notes.
+Your hand-written MCP server lives in this folder. The server is implemented in JavaScript using Node.js.
 
 ## What is already here
 
 | File | What it is |
 |---|---|
-| `lectures.json` | The course lectures. Your first tool reads this file. |
-| `messages.jsonl` | The messages a client sends, in order, with what your server must answer. |
-| `check.mjs` | The self-check. It starts your server, sends those messages and tells you what is wrong. |
+| `lectures.json` | The course lectures used by the tools. |
+| `messages.jsonl` | The messages sent by the MCP client. |
+| `check.mjs` | The self-check script used to test the server. |
+| `server.js` | The MCP server implementation. |
 
 ## The two tools
 
-1. **`find_lecture`**: everyone writes this one. Input: `number` (1 to 10). It returns the title and topics of that lecture from `lectures.json`. A number outside the range is not a crash and not a protocol error: it is a result with `isError: true` and a readable message.
-2. **One of your own**: anything useful that reads local data. Give it a description a model can choose by. Every tool needs one: the self-check applies the same rule to all of them, because a description is the only thing a model reads when it decides what to call.
+### 1. find_lecture
+
+This tool finds a lecture by its number and returns its title and topics from `lectures.json`.
+
+Input: `number` (integer from 1 to 10).
+
+If the lecture does not exist, the server returns a readable message with `isError: true` instead of a protocol error.
+
+### 2. search_lectures
+
+This tool searches local course lectures using a keyword.
+
+Input: `keyword` (string).
+
+It searches lecture titles and topics and returns matching lectures.
+
+Both tools have descriptions and input schemas to help an AI model select the appropriate tool.
 
 ## Where this goes next
 
-Do not throw this folder away after Exercise 1. From Exercise 3 it becomes **your project's own MCP server**: the same protocol loop, with the tools rewired from `lectures.json` to your real data. Its tools call exactly the same service functions your HTTP routes call, so a tool obeys the same rules an API request does, and it carries a user (the `MCP_TOKEN` in `.env.example`) so it may do what that person may do and no more.
+From Exercise 3, this MCP server can be extended to work with the project's real data.
 
-That is the whole design, and it is one sentence: **one set of rules, two front doors.** An MCP tool that writes its own database query is a second way into your data with none of your rules on it, and Exercise 5 is very good at finding those.
+The MCP tools should call the same service functions as the HTTP routes, ensuring consistent rules, validation, and authorization.
 
-Add an `mcp` script to `package.json` (`"mcp": "node mcp-server/server.js"`) so your agent, CI and the lecturer can all start the server the same way.
+The design principle is: **one set of rules, two front doors.**
 
-## Run the self-check
+## How to start it
+
+Run the MCP server:
 
 ```bash
-node mcp-server/check.mjs -- <your start command>
-# for example
-node mcp-server/check.mjs -- node mcp-server/server.js
-node mcp-server/check.mjs -- python3 mcp-server/server.py
-# once you have added the mcp script
+npm run --silent mcp
+```
+
+Alternatively:
+
+```bash
+node mcp-server/server.js
+```
+
+To run the self-check:
+
+```bash
 node mcp-server/check.mjs -- npm run --silent mcp
 ```
 
-It prints one line per check. Fix the failures yourself: the agent may explain a message or review your handler, but it must not write the protocol code for you.
-
-## How to start it
-<!-- The exact command, so the lecturer can run your server too. -->
+Self-check result: **12/12 checks passed.**
 
 ## Session transcript
-<!-- Paste one full session: initialize, the reply, tools/list, one good tools/call, one that fails. -->
+
+### 1. Initialize
+
+Request:
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test-client","version":"1.0.0"}}}
+```
+
+Response:
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{"tools":{}},"serverInfo":{"name":"my-mcp-server","version":"1.0.0"}}}
+```
+
+The server successfully initialized and returned its protocol version, capabilities, and server information.
+
+### 2. Tools list
+
+Request:
+
+```json
+{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+```
+
+Response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "tools": [
+      {
+        "name": "find_lecture",
+        "description": "Find a lecture by its number and return its title and topics.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          },
+          "required": ["number"]
+        }
+      },
+      {
+        "name": "search_lectures",
+        "description": "Search local course lectures by a keyword in their titles or topics.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "keyword": {
+              "type": "string",
+              "description": "The keyword to search for."
+            }
+          },
+          "required": ["keyword"]
+        }
+      }
+    ]
+  }
+}
+```
+
+The server successfully returned both tools, including their descriptions and input schemas.
+
+### 3. Successful tool call
+
+Request:
+
+```json
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"find_lecture","arguments":{"number":5}}}
+```
+
+Response:
+
+```json
+{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"Title: What the agent built, part 1\nTopics: HTTP, REST vs GraphQL, data modeling, ORM, layers"}]}}
+```
+
+The server successfully returned the title and topics of lecture 5.
+
+### 4. Failed tool call
+
+Request:
+
+```json
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"find_lecture","arguments":{"number":99}}}
+```
+
+Response:
+
+```json
+{"jsonrpc":"2.0","id":4,"result":{"content":[{"type":"text","text":"Lecture 99 not found."}],"isError":true}}
+```
+
+The server correctly handled a nonexistent lecture.
+
+Instead of crashing or returning a protocol error, it returned a tool result with `isError: true`.
 
 ## The description experiment
-<!-- Three sentences: what you changed in the description, whether the model chose the tool differently, and why you think so. -->
+
+Original description:
+
+"Find a lecture by its number and return its title and topics."
+
+Proposed modified description:
+
+"Use this tool when the user asks for a specific lecture number to retrieve its title and topics."
+
+The modified description explains more clearly when the model should select the tool.
+
+The effect on tool selection has not yet been tested with a model.
+
+The expected improvement is that the model will distinguish requests for a specific lecture number from keyword searches.
