@@ -1,4 +1,3 @@
-
 # StudyCircle — Study Groups
 
 ## Project option
@@ -119,7 +118,7 @@ The application architecture described above is planned and has not yet been imp
 - [AC-11] A group owner who requests an AI-generated description receives an editable suggestion, and the group description in the database is not changed until the owner explicitly saves it.
 - [AC-12] A group owner who requests AI assistance while the model provider is unavailable sees a failure message and can enter a description manually, without creating an incomplete group record.
 
-### Slice 1: sign-in and study groups list screen
+## Slice 1: sign-in and study groups list screen
 
 The first implementation slice will focus on authentication and displaying study groups.
 
