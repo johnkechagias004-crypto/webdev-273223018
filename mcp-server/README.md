@@ -1,3 +1,4 @@
+
 # Exercise 1 · MCP server
 
 Your hand-written MCP server lives in this folder. The server is implemented in JavaScript using Node.js.
@@ -56,7 +57,7 @@ node mcp-server/server.js
 To run the self-check:
 
 ```bash
-node mcp-server/check.mjs -- npm run --silent mcp
+node mcp-server/check.mjs -- node mcp-server/server.js
 ```
 
 Self-check result: **12/12 checks passed.**
@@ -80,6 +81,8 @@ Response:
 The server successfully initialized and returned its protocol version, capabilities, and server information.
 
 ### 2. Tools list
+
+The following transcript was recorded before the description experiment.
 
 Request:
 
@@ -165,18 +168,92 @@ The server correctly handled a nonexistent lecture.
 
 Instead of crashing or returning a protocol error, it returned a tool result with `isError: true`.
 
+## Gemini CLI integration
+
+The MCP server was connected to Gemini CLI in GitHub Codespaces.
+
+The `/mcp` command confirmed that the server was ready and exposed two tools:
+
+- `mcp_my-project_find_lecture`
+- `mcp_my-project_search_lectures`
+
+Both tools were successfully called by Gemini using natural-language prompts.
+
+### Test 1: Find a specific lecture
+
+Prompt:
+
+"What is lecture 5 about?"
+
+Selected tool:
+
+`find_lecture(number: 5)`
+
+Result:
+
+- Title: What the agent built, part 1
+- Topics: HTTP, REST vs GraphQL, data modeling, ORM, layers
+
+The model selected the correct tool and returned the expected lecture information.
+
+### Test 2: Search by keyword
+
+Prompt:
+
+"Which lectures cover HTTP?"
+
+Selected tool:
+
+`search_lectures(keyword: HTTP)`
+
+Result:
+
+Lecture 5: What the agent built, part 1.
+
+The model selected the correct keyword search tool and returned the matching lecture.
+
 ## The description experiment
 
-Original description:
+### Objective
+
+The objective was to investigate whether changing a tool description affects the model's tool selection.
+
+### Original description
 
 "Find a lecture by its number and return its title and topics."
 
-Proposed modified description:
+### Modified description
 
 "Use this tool when the user asks for a specific lecture number to retrieve its title and topics."
 
-The modified description explains more clearly when the model should select the tool.
+Only the description of the `find_lecture` tool was modified. The implementation and input schema remained unchanged.
 
-The effect on tool selection has not yet been tested with a model.
+### Method
 
-The expected improvement is that the model will distinguish requests for a specific lecture number from keyword searches.
+The same two prompts were tested using Gemini CLI before and after modifying the tool description.
+
+The Gemini CLI was restarted after the modification so that it could load the updated MCP tool description.
+
+### Experiment results
+
+| Prompt | Before modification | After modification |
+|---|---|---|
+| What is lecture 5 about? | find_lecture | find_lecture |
+| Which lectures cover HTTP? | search_lectures | search_lectures |
+
+| Test | Before | After |
+|---|---|---|
+| Correct tool selection | 2/2 | 2/2 |
+| Self-checks | 12/12 | 12/12 |
+
+Both tools were selected correctly before and after the modification.
+
+All 12 self-checks passed before and after the change.
+
+### Conclusion
+
+The modified description provides clearer guidance about when the model should use the `find_lecture` tool.
+
+However, no difference in tool selection was observed in these two test cases. Both descriptions resulted in correct tool selection.
+
+The experiment demonstrates that tool descriptions provide guidance to the model, although these two successful test cases are not sufficient to establish whether the modified description improves tool selection in general.

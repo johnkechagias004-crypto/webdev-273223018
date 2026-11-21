@@ -32,7 +32,7 @@ function readLectures() {
 const tools = [
   {
     name: 'find_lecture',
-    description: 'Find a lecture by its number and return its title and topics.',
+    description: 'Use this tool when the user asks for a specific lecture number to retrieve its title and topics.',
     inputSchema: {
       type: 'object',
       properties: {
