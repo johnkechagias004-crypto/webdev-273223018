@@ -1,11 +1,20 @@
-
 {
   "name": "webdev-mcp-server",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "mcp": "node mcp-server/server.js",
-    "test": "node mcp-server/check.mjs -- npm run --silent mcp"
+    "test": "node mcp-server/check.mjs -- npm run --silent mcp",
+    "build": "vite build",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-include='src/services/**' --test-coverage-exclude='test/**' --test-coverage-lines=100 && node --test --experimental-test-coverage --test-coverage-include='src/**' --test-coverage-exclude='test/**' --test-coverage-lines=80"
+  },
+  "dependencies": {
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "vite": "^8.3.8"
   }
 }
-
